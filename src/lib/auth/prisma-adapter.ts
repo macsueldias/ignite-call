@@ -1,11 +1,11 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse, NextPageContext } from 'next'
 import { Adapter } from 'next-auth/adapters'
+import { parseCookies, destroyCookie } from 'nookies'
 import { prisma } from '../prisma'
-import { destroyCookie, parseCookies } from 'nookies'
 
 export function PrismaAdapter(
-  req: NextApiRequest,
-  res: NextApiResponse,
+  req: NextApiRequest | NextPageContext['req'],
+  res: NextApiResponse | NextPageContext['res'],
 ): Adapter {
   return {
     async createUser(user) {
@@ -31,12 +31,12 @@ export function PrismaAdapter(
       })
 
       return {
-        id: prismaUser?.id,
-        name: prismaUser?.name,
-        username: prismaUser?.username,
+        id: prismaUser.id,
+        name: prismaUser.name,
+        username: prismaUser.username,
         email: prismaUser.email!,
-        avatar_url: prismaUser?.avatar_url!,
         emailVerified: null,
+        avatar_url: prismaUser.avatar_url!,
       }
     },
 
@@ -50,13 +50,14 @@ export function PrismaAdapter(
       if (!user) {
         return null
       }
+
       return {
-        id: user?.id,
-        name: user?.name,
-        username: user?.username,
+        id: user.id,
+        name: user.name,
+        username: user.username,
         email: user.email!,
-        avatar_url: user?.avatar_url!,
         emailVerified: null,
+        avatar_url: user.avatar_url!,
       }
     },
     async getUserByEmail(email) {
@@ -69,16 +70,16 @@ export function PrismaAdapter(
       if (!user) {
         return null
       }
+
       return {
-        id: user?.id,
-        name: user?.name,
-        username: user?.username,
+        id: user.id,
+        name: user.name,
+        username: user.username,
         email: user.email!,
-        avatar_url: user?.avatar_url!,
         emailVerified: null,
+        avatar_url: user.avatar_url!,
       }
     },
-
     async getUserByAccount({ providerAccountId, provider }) {
       const account = await prisma.account.findUnique({
         where: {
@@ -148,8 +149,6 @@ export function PrismaAdapter(
       })
     },
 
-    async unlinkAccount({ providerAccountId, provider }) {},
-
     async createSession({ sessionToken, userId, expires }) {
       await prisma.session.create({
         data: {
@@ -158,6 +157,7 @@ export function PrismaAdapter(
           session_token: sessionToken,
         },
       })
+
       return {
         userId,
         sessionToken,
