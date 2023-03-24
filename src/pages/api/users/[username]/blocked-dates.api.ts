@@ -12,9 +12,9 @@ export default async function handle(
   }
 
   const username = String(req.query.username)
-  const { year } = req.query
+  const { year, month } = req.query
 
-  if (!year) {
+  if (!year || !month) {
     return res.status(400).json({ message: 'Year or month not specified.' })
   }
 
@@ -39,9 +39,13 @@ export default async function handle(
 
   const blockedWeekDays = [0, 1, 2, 3, 4, 5, 6].filter((weekDay) => {
     return !availableWeekDays.some(
-      (availableWeekDays) => availableWeekDays.week_day === weekDay,
+      (availableWeekDay) => availableWeekDay.week_day === weekDay,
     )
   })
 
-  return blockedWeekDays
+  const blockedDatesRaw = await prisma.$queryRaw`
+    SELECT * FROM schedulings
+  `
+
+  return res.json({ blockedWeekDays, blockedDatesRaw })
 }
